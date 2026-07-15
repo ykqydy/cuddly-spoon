@@ -1,31 +1,6 @@
-# Visual Studio
 .vs/
-
-# Intermediate build output
-MoveandCut/x64/
-
-# Debug build (exclude entirely)
-x64/Debug/
-
-# Release build: ignore all files, then un-ignore the runnable plugin
-x64/Release/*
-!x64/Release/*.dlx
-!x64/Release/*.dll
-
-# VS project / user files
-*.user
-*.suo
-*.sdf
-*.opensdf
-*.opendb
-*.VC.db*
-*.sln.docstates
-
-# Backup / temp
 *.bak
 *_temp.*
+*.user
 new_body.txt
-
-# OS
-Thumbs.db
-.DS_Store
+MoveandCut/
