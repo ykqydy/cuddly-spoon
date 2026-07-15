@@ -1,0 +1,70 @@
+﻿test2 NXOPEN 对话框调试记录
+==========================
+
+项目: NX2306 Block Styler C++ 对话框
+源文件: D:\NXOPEN\USER\Source\test\test2.cpp
+DLL: D:\NXOPEN\USER\Application\test.dll
+测试零件: day1.prt
+
+
+一、开发历程
+
+1. 初始问题
+   - signal 11: UF函数和SetPoint在UI回调中调用导致崩溃
+   - 错误3520041: GetInteger不适用Enumeration块
+   - 错误670030: 布尔求差特征导致模型更新失败
+
+2. 关键修复
+   - 所有回调清空(无SetPoint/UF调用) -> 修复signal 11
+   - GetEnum替代GetInteger -> 修复3520041
+   - RemoveParametersBuilder -> 修复670030
+   - OptionsDeltaXyz -> 正确设置ModlMotion运动模式
+   - Point3d(0,0,0)初始化 -> 修复垃圾值/NaN导致No motion
+   - GetBodyGlobalBBox遍历边顶点计算包围盒 -> 修复体位置错误
+
+3. 最终代码状态
+   - 使用纯NXOpen C++ API(零UFUN函数)
+   - Body::GetEdges + Edge::GetVertices 计算包围盒
+   - Body::GetFaces + Face::GetEdges 计算面中心
+   - workPart->WCS()->Origin() 获取WCS原点
+   - 编译零错误
+
+
+二、对话框控件
+
+selection0: 选择体
+enum0: 体中心上(0)/体中心(1)/体中心下(2)/面中心(3)
+point0: 起始点(可选,不设则用enum0计算)
+button0: 移动对象
+enum01: ABS原点(0)/面中心(1)/ZO点(2)/WCS原点(3)/XO点(4)/体中心(5)/YO点(6)
+point01: 目标点(可选,不设则用enum01计算)
+button01: 复制对象
+
+
+三、enum点计算逻辑
+
+enum0(起始点):
+  体中心上(0) = 包围盒顶部Z中心
+  体中心(1)  = 包围盒中心
+  体中心下(2) = 包围盒底部Z中心
+  面中心(3)  = 所有面顶点平均值
+
+enum01(目标点):
+  ABS原点(0) = (0,0,0)
+  面中心(1)  = 所有面顶点平均值
+  ZO点(2)   = (0,0,body_center_z)
+  WCS原点(3) = WCS原点坐标
+  XO点(4)   = (body_center_x,0,0)
+  体中心(5)  = 包围盒中心
+  YO点(6)   = (0,body_center_y,0)
+
+
+四、已知问题
+
+- day1.prt布尔求差特征导致Update undo happened
+- RemoveParametersBuilder需作用于Feature而非Body
+
+
+五、编译命令
+
+MSBuild test.vcxproj /p:Configuration=Release /p:Platform=x64
