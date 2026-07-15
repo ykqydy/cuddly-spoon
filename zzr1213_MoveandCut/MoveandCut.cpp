@@ -37,12 +37,16 @@
 #include "MoveandCut.hpp"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
 #include <string.h>
 #undef CreateDialog
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 static char g_dlxPath[260];
 using namespace NXOpen;
 using namespace NXOpen::BlockStyler;
+static double lastStartPt[3] = {0,0,0};
+static double lastEndPt[3] = {0,0,0};
+
 
 //------------------------------------------------------------------------------
 // Initialize static variables
@@ -255,28 +259,30 @@ static bool getBodyBBox(NXOpen::BlockStyler::SelectObject* sel, double box[6])
     if (objects.size() == 0) return false;
     NXOpen::Body* b = dynamic_cast<NXOpen::Body*>(objects[0]);
     if (b == NULL) return false;
-    try
+    bool first = true;
+    double xmin=0,ymin=0,zmin=0,xmax=0,ymax=0,zmax=0;
+    std::vector<NXOpen::Face*> faces;
+    try { faces = b->GetFaces(); } catch(...) { return false; }
+    for (int fi = 0; fi < (int)faces.size(); fi++)
     {
-        std::vector<NXOpen::NXObject*> objList;
-        objList.push_back(dynamic_cast<NXOpen::NXObject*>(b));
-        std::vector<NXOpen::Point3d> pts, dirs;
-        std::vector<double> lengths;
-        NXOpen::Point3d origin, extreme;
-        MoveandCut::theSession->Measurement()->GetBoundingBoxProperties(
-            objList, 0, NXOpen::Point3d(0,0,0), false, pts, dirs, lengths, &origin, &extreme, NULL);
-        if (pts.size() >= 8)
+        std::vector<NXOpen::Edge*> edges;
+        try { edges = faces[fi]->GetEdges(); } catch(...) { continue; }
+        for (int ei = 0; ei < (int)edges.size(); ei++)
         {
-            double xmin=pts[0].X,ymin=pts[0].Y,zmin=pts[0].Z,xmax=pts[0].X,ymax=pts[0].Y,zmax=pts[0].Z;
-            for (int i=1;i<8;i++) {
-                if (pts[i].X<xmin)xmin=pts[i].X; if (pts[i].Y<ymin)ymin=pts[i].Y; if (pts[i].Z<zmin)zmin=pts[i].Z;
-                if (pts[i].X>xmax)xmax=pts[i].X; if (pts[i].Y>ymax)ymax=pts[i].Y; if (pts[i].Z>zmax)zmax=pts[i].Z;
-            }
-            box[0]=xmin;box[1]=ymin;box[2]=zmin;box[3]=xmax;box[4]=ymax;box[5]=zmax;
-            return true;
+            try {
+                NXOpen::Point3d v1, v2;
+                edges[ei]->GetVertices(&v1, &v2);
+                if (first) { xmin=xmax=v1.X; ymin=ymax=v1.Y; zmin=zmax=v1.Z; first=false; }
+                if (v1.X<xmin)xmin=v1.X; if (v1.Y<ymin)ymin=v1.Y; if (v1.Z<zmin)zmin=v1.Z;
+                if (v1.X>xmax)xmax=v1.X; if (v1.Y>ymax)ymax=v1.Y; if (v1.Z>zmax)zmax=v1.Z;
+                if (v2.X<xmin)xmin=v2.X; if (v2.Y<ymin)ymin=v2.Y; if (v2.Z<zmin)zmin=v2.Z;
+                if (v2.X>xmax)xmax=v2.X; if (v2.Y>ymax)ymax=v2.Y; if (v2.Z>zmax)zmax=v2.Z;
+            } catch(...) { continue; }
         }
     }
-    catch(...) {}
-    return false;
+    if (first) return false;
+    box[0]=xmin;box[1]=ymin;box[2]=zmin;box[3]=xmax;box[4]=ymax;box[5]=zmax;
+    return true;
 }
 
 // Helper: read Enumeration value using correct API (ValueAsString + GetEnumMembers)
@@ -315,7 +321,7 @@ int MoveandCut::apply_cb()
 
         // Start point: manual point first, fall back to enum
         bool hasManualStart = false;
-        try { NXOpen::Point3d pt = point0->Point(); if (pt.X != 0.0 || pt.Y != 0.0 || pt.Z != 0.0) { startPt[0]=pt.X; startPt[1]=pt.Y; startPt[2]=pt.Z; hasManualStart=true; } } catch(...) {}
+        try { NXOpen::Point3d pt = point0->Point(); if (pt.X != lastStartPt[0] || pt.Y != lastStartPt[1] || pt.Z != lastStartPt[2]) { if (pt.X != 0.0 || pt.Y != 0.0 || pt.Z != 0.0) { startPt[0]=pt.X; startPt[1]=pt.Y; startPt[2]=pt.Z; hasManualStart=true; } } } catch(...) {}
 
         if (!hasManualStart)
         {
@@ -331,7 +337,7 @@ int MoveandCut::apply_cb()
 
         // End point: manual point first, fall back to enum
         bool hasManualEnd = false;
-        try { NXOpen::Point3d pt = point01->Point(); if (pt.X != 0.0 || pt.Y != 0.0 || pt.Z != 0.0) { endPt[0]=pt.X; endPt[1]=pt.Y; endPt[2]=pt.Z; hasManualEnd=true; } } catch(...) {}
+        try { NXOpen::Point3d pt = point01->Point(); if (pt.X != lastEndPt[0] || pt.Y != lastEndPt[1] || pt.Z != lastEndPt[2]) { if (pt.X != 0.0 || pt.Y != 0.0 || pt.Z != 0.0) { endPt[0]=pt.X; endPt[1]=pt.Y; endPt[2]=pt.Z; hasManualEnd=true; } } } catch(...) {}
 
         if (!hasManualEnd)
         {
@@ -402,6 +408,8 @@ int MoveandCut::apply_cb()
         errorCode = 1;
         theUI->NXMessageBox()->Show("Error", NXOpen::NXMessageBox::DialogTypeError, ex.what());
     }
+    try { NXOpen::Point3d pt = point0->Point(); lastStartPt[0]=pt.X; lastStartPt[1]=pt.Y; lastStartPt[2]=pt.Z; } catch(...) {}
+    try { NXOpen::Point3d pt = point01->Point(); lastEndPt[0]=pt.X; lastEndPt[1]=pt.Y; lastEndPt[2]=pt.Z; } catch(...) {}
     return errorCode;
 }
 

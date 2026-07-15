@@ -39,6 +39,8 @@
 #include <NXOpen/BlockStyler_SpecifyPoint.hxx>
 #include <NXOpen/BlockStyler_Enumeration.hxx>
 #include <NXOpen/Body.hxx>
+#include <NXOpen/Face.hxx>
+#include <NXOpen/Edge.hxx>
 #include <NXOpen/Part.hxx>
 #include <NXOpen/PartCollection.hxx>
 #include <NXOpen/Features_FeatureCollection.hxx>
@@ -146,6 +148,7 @@ private:
     
 };
 #endif //MOVEANDCUT_H_INCLUDED
+
 
 
 
