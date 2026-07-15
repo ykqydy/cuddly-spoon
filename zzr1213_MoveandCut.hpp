@@ -1,4 +1,4 @@
-﻿//==============================================================================
+//==============================================================================
 //  WARNING!!  This file is overwritten by the Block Styler while generating
 //  the automation code. Any modifications to this file will be lost after
 //  generating the code again.
@@ -13,8 +13,8 @@
 //
 //==============================================================================
 
-#ifndef MOVEANDCUT_H_INCLUDED
-#define MOVEANDCUT_H_INCLUDED
+#ifndef ZZR1213_MOVEANDCUT_H_INCLUDED
+#define ZZR1213_MOVEANDCUT_H_INCLUDED
 
 //------------------------------------------------------------------------------
 //These includes are needed for the following template code
@@ -140,4 +140,4 @@ private:
     NXOpen::BlockStyler::Enumeration* enum01;// Block type: Enumeration
     
 };
-#endif //MOVEANDCUT_H_INCLUDED
+#endif //ZZR1213_MOVEANDCUT_H_INCLUDED

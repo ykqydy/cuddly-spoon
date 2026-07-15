@@ -1,4 +1,4 @@
-﻿//==============================================================================
+//==============================================================================
 //  WARNING!!  This file is overwritten by the Block UI Styler while generating
 //  the automation code. Any modifications to this file will be lost after
 //  generating the code again.
@@ -34,7 +34,7 @@
 //------------------------------------------------------------------------------
 //These includes are needed for the following template code
 //------------------------------------------------------------------------------
-#include "MoveandCut.hpp"
+#include "zzr1213_MoveandCut.hpp"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef CreateDialog
@@ -63,7 +63,7 @@ MoveandCut::MoveandCut()
         // Initialize the NX Open C++ API environment
         MoveandCut::theSession = NXOpen::Session::GetSession();
         MoveandCut::theUI = UI::GetUI();
-        theDlxFileName = "MoveandCut.dlx";
+        theDlxFileName = "zzr1213_MoveandCut.dlx";
         HMODULE hMod = (HMODULE)&__ImageBase;
         GetModuleFileNameA(hMod, g_dlxPath, 260);
         int ln = strlen(g_dlxPath); g_dlxPath[ln-3]='d'; g_dlxPath[ln-2]='l'; g_dlxPath[ln-1]='x';
