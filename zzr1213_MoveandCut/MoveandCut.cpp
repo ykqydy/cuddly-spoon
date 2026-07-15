@@ -34,17 +34,13 @@
 //------------------------------------------------------------------------------
 //These includes are needed for the following template code
 //------------------------------------------------------------------------------
-#include "zzr1213_MoveandCut.hpp"
+#include "MoveandCut.hpp"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <string.h>
 #undef CreateDialog
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 static char g_dlxPath[260];
-#include <uf_modl.h>
-#include <uf_disp.h>
-#include <uf_csys.h>
-#include <uf_ui.h>
-#include <string.h>
 using namespace NXOpen;
 using namespace NXOpen::BlockStyler;
 
@@ -63,7 +59,7 @@ MoveandCut::MoveandCut()
         // Initialize the NX Open C++ API environment
         MoveandCut::theSession = NXOpen::Session::GetSession();
         MoveandCut::theUI = UI::GetUI();
-        theDlxFileName = "zzr1213_MoveandCut.dlx";
+        theDlxFileName = "MoveandCut.dlx";
         HMODULE hMod = (HMODULE)&__ImageBase;
         GetModuleFileNameA(hMod, g_dlxPath, 260);
         int ln = strlen(g_dlxPath); g_dlxPath[ln-3]='d'; g_dlxPath[ln-2]='l'; g_dlxPath[ln-1]='x';
@@ -249,17 +245,7 @@ void MoveandCut::dialogShown_cb()
 //Callback Name: apply_cb
 //------------------------------------------------------------------------------
 
-// Helper: safely get body tag from selection
-static bool getBodyTag(NXOpen::BlockStyler::SelectObject* sel, tag_t& outTag)
-{
-    if (sel == NULL) return false;
-    std::vector<NXOpen::TaggedObject*> objects = sel->GetSelectedObjects();
-    if (objects.size() == 0) return false;
-    NXOpen::Body* b = dynamic_cast<NXOpen::Body*>(objects[0]);
-    if (b == NULL) return false;
-    outTag = b->Tag();
-    return true;
-}
+
 
 // Helper: get body bounding box [xmin, ymin, zmin, xmax, ymax, zmax]
 static bool getBodyBBox(NXOpen::BlockStyler::SelectObject* sel, double box[6])
@@ -269,8 +255,28 @@ static bool getBodyBBox(NXOpen::BlockStyler::SelectObject* sel, double box[6])
     if (objects.size() == 0) return false;
     NXOpen::Body* b = dynamic_cast<NXOpen::Body*>(objects[0]);
     if (b == NULL) return false;
-    UF_MODL_ask_bounding_box(b->Tag(), box);
-    return true;
+    try
+    {
+        std::vector<NXOpen::NXObject*> objList;
+        objList.push_back(dynamic_cast<NXOpen::NXObject*>(b));
+        std::vector<NXOpen::Point3d> pts, dirs;
+        std::vector<double> lengths;
+        NXOpen::Point3d origin, extreme;
+        MoveandCut::theSession->Measurement()->GetBoundingBoxProperties(
+            objList, 0, NXOpen::Point3d(0,0,0), false, pts, dirs, lengths, &origin, &extreme, NULL);
+        if (pts.size() >= 8)
+        {
+            double xmin=pts[0].X,ymin=pts[0].Y,zmin=pts[0].Z,xmax=pts[0].X,ymax=pts[0].Y,zmax=pts[0].Z;
+            for (int i=1;i<8;i++) {
+                if (pts[i].X<xmin)xmin=pts[i].X; if (pts[i].Y<ymin)ymin=pts[i].Y; if (pts[i].Z<zmin)zmin=pts[i].Z;
+                if (pts[i].X>xmax)xmax=pts[i].X; if (pts[i].Y>ymax)ymax=pts[i].Y; if (pts[i].Z>zmax)zmax=pts[i].Z;
+            }
+            box[0]=xmin;box[1]=ymin;box[2]=zmin;box[3]=xmax;box[4]=ymax;box[5]=zmax;
+            return true;
+        }
+    }
+    catch(...) {}
+    return false;
 }
 
 // Helper: read Enumeration value using correct API (ValueAsString + GetEnumMembers)
@@ -297,8 +303,7 @@ int MoveandCut::apply_cb()
     try
     {
         // 1. Validate selection
-        tag_t bodyTag = NULL_TAG;
-        if (!getBodyTag(selection0, bodyTag))
+        if (selection0->GetSelectedObjects().size() == 0)
         {
             theUI->NXMessageBox()->Show("Error", NXOpen::NXMessageBox::DialogTypeWarning, "Select a body first");
             return 1;
@@ -336,7 +341,7 @@ int MoveandCut::apply_cb()
             case 0: endPt[0]=0; endPt[1]=0; endPt[2]=0; break;
             case 1: { try { NXOpen::Point3d pt = point01->Point(); endPt[0]=pt.X; endPt[1]=pt.Y; endPt[2]=pt.Z; } catch(...) {} } break;
             case 2: { double b[6]; if (getBodyBBox(selection0, b)) { endPt[0]=(b[0]+b[3])/2; endPt[1]=(b[1]+b[4])/2; endPt[2]=b[2]; } } break;
-            case 3: { tag_t wcsTag, mTag; UF_CSYS_ask_wcs(&wcsTag); UF_CSYS_ask_csys_info(wcsTag, &mTag, endPt); } break;
+            case 3: { NXOpen::Point3d wcsOrigin = theSession->Parts()->Work()->WCS()->Origin(); endPt[0]=wcsOrigin.X; endPt[1]=wcsOrigin.Y; endPt[2]=wcsOrigin.Z; } break;
             case 4: { double b[6]; if (getBodyBBox(selection0, b)) { endPt[0]=b[0]; endPt[1]=(b[1]+b[4])/2; endPt[2]=(b[2]+b[5])/2; } } break;
             case 5: { double b[6]; if (getBodyBBox(selection0, b)) { endPt[0]=(b[0]+b[3])/2; endPt[1]=(b[1]+b[4])/2; endPt[2]=(b[2]+b[5])/2; } } break;
             case 6: { double b[6]; if (getBodyBBox(selection0, b)) { endPt[0]=(b[0]+b[3])/2; endPt[1]=b[1]; endPt[2]=(b[2]+b[5])/2; } } break;
@@ -383,8 +388,6 @@ int MoveandCut::apply_cb()
 
         NXOpen::Session::UndoMarkId mark = theSession->SetUndoMark(NXOpen::Session::MarkVisibilityVisible, "MoveandCut");
         theSession->UpdateManager()->DoUpdate(mark);
-        UF_DISP_refresh();
-        UF_DISP_regenerate_display();
         builder->Destroy();
 
         char msg[256];
@@ -475,3 +478,8 @@ PropertyList* MoveandCut::GetBlockProperties(const char *blockID)
 {
     return theDialog->GetBlockProperties(blockID);
 }
+
+
+
+
+

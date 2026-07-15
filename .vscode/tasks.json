@@ -1,0 +1,47 @@
+﻿{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Release x64",
+            "type": "shell",
+            "command": "build.bat",
+            "args": [ "Release" ],
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [ "/d", "/c" ]
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [ "$msCompile" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Build Debug x64",
+            "type": "shell",
+            "command": "build.bat",
+            "args": [ "Debug" ],
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [ "/d", "/c" ]
+                }
+            },
+            "group": "build",
+            "problemMatcher": [ "$msCompile" ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ]
+}
+

@@ -13,14 +13,17 @@
 //
 //==============================================================================
 
-#ifndef ZZR1213_MOVEANDCUT_H_INCLUDED
-#define ZZR1213_MOVEANDCUT_H_INCLUDED
+#ifndef MOVEANDCUT_H_INCLUDED
+#define MOVEANDCUT_H_INCLUDED
 
+#include <NXOpen/CoordinateSystem.hxx>
+#include <NXOpen/WCS.hxx>
+#include <NXOpen/Measurement.hxx>
 //------------------------------------------------------------------------------
 //These includes are needed for the following template code
 //------------------------------------------------------------------------------
-#include <uf_defs.h>
-#include <uf_ui_types.h>
+
+
 #include <iostream>
 #include <NXOpen/Session.hxx>
 #include <NXOpen/UI.hxx>
@@ -95,6 +98,8 @@
 //------------------------------------------------------------------------------
 // Namespaces needed for following template
 //------------------------------------------------------------------------------
+#define DllExport __declspec(dllexport)
+
 using namespace std;
 using namespace NXOpen;
 using namespace NXOpen::BlockStyler;
@@ -140,4 +145,9 @@ private:
     NXOpen::BlockStyler::Enumeration* enum01;// Block type: Enumeration
     
 };
-#endif //ZZR1213_MOVEANDCUT_H_INCLUDED
+#endif //MOVEANDCUT_H_INCLUDED
+
+
+
+
+
