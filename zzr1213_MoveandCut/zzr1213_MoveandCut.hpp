@@ -1,4 +1,4 @@
-//==============================================================================
+﻿//==============================================================================
 //  WARNING!!  This file is overwritten by the Block Styler while generating
 //  the automation code. Any modifications to this file will be lost after
 //  generating the code again.
