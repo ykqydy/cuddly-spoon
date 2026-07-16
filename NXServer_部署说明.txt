@@ -1,0 +1,91 @@
+╔════════════════════════════════════════════════════╗
+║        NXServer 部署说明                          ║
+║        NX2306 HTTP API 后台服务                  ║
+╚════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+一、项目简介
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+NXServer 是一个运行在 NX2306 进程内的 HTTP API 服务。
+外部程序通过 HTTP POST 请求远程调用 NX 的功能。
+
+支持的接口：
+
+  Type=1  开模             → HFOpen_mold.dll
+  Type=2  模型分析（获取颜色）→ ModelAnalysis.dll
+
+请求格式：
+  POST http://localhost:12345/nxcommand/
+  {"Type":2,"taskId":1,"filePath":"D:\\part.prt"}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+二、已部署文件
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+全部在 D:\NXOPEN\USER\Startup\：
+
+  NXServer.dll              C# 服务端主程序
+  Newtonsoft.Json.dll       JSON 解析库
+  Newtonsoft.Json.xml       XML 文档
+  ModelAnalysis.dll         模型分析 C++ DLL（Type=2）
+  HFOpen_mold.dll           开模 C++ DLL（Type=1）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+三、启动方式
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+方法 A：自动加载（推荐）
+  1. 启动 NX2306
+  2. NX 自动扫描 Startup 目录，加载 NXServer.dll
+  3. HTTP 监听自动启动
+
+方法 B：手动加载（调试用）
+  1. 启动 NX2306，打开任意 prt
+  2. 文件 → 执行 → NX Open...
+  3. 选择 D:\NXOPEN\USER\Startup\NXServer.dll
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+四、编译方法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+C++ DLL（每次改完都要重编）：
+
+  cd D:\downloads\nxserver-main\模型分析\ModelAnalysis
+  set "UGII_BASE_DIR=D:\Program Files\Siemens\NX2306"
+  MSBuild ModelAnalysis.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
+  copy x64\Release\ModelAnalysis.dll D:\NXOPEN\USER\Startup\
+
+  cd D:\downloads\nxserver-main\下载并打开stp或prt\HFOpen_mold
+  MSBuild HFOpen_mold.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
+  copy x64\Release\HFOpen_mold.dll D:\NXOPEN\USER\Startup\
+
+C# 项目：
+
+  cd D:\downloads\nxserver-main\NXServerHttp\NXServer
+  MSBuild NXServer.csproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
+  copy D:\Output\NXServer.dll D:\NXOPEN\USER\Startup\
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+五、首次部署额外步骤
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+注册 URL 权限（管理员 PowerShell，只需一次）：
+  netsh http add urlacl url=http://+:12345/nxcommand/ user=everyone
+
+日志路径：%TEMP%\NXServerLog\yyyy-MM-dd.log
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+六、常见问题
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q: 连接失败
+A: netsh http show urlacl | findstr 12345   检查权限
+   netstat -ano | findstr 12345              检查端口
+
+Q: 请求卡住不返回
+A: 检查 %TEMP%\NXServerLog\ 日志文件
+   常见原因：JSON 格式错误、C++ DLL 找不到、许可证超时
+
+Q: 重新加载后不生效
+A: 需要重新走 文件 → 执行 → NX Open，或重启 NX

@@ -1,0 +1,20 @@
+$body = '{"Type":2,"taskId":1,"filePath":"D:\\downloads\\GetSolidColorExe\\test_steps\\00000007_step.prt"}'
+PS C:\Users\xian7> Invoke-RestMethod -Uri http://localhost:12345/nxcommand/ -Method Post -Body $body -ContentType "application/json"
+
+
+Type        : 2
+color_index : 129
+color_rgb   : {156.0, 168.0, 171.0}
+material    :
+success     : True
+taskId      : 1
+$body = '{"Type":2,"taskId":1,"filePath":"D:\\HuaweiMoveData\\Users\\xian7\\Desktop\\temp\\1.prt"}'
+PS C:\Users\xian7> Invoke-RestMethod -Uri http://localhost:12345/nxcommand/ -Method Post -Body $body -ContentType "application/json"
+
+
+Type        : 2
+color_index : 78
+color_rgb   : {255.0, 153.0, 0.0}
+material    :
+success     : True
+taskId      : 1
