@@ -1,0 +1,5 @@
+PS C:\Users\xian7> $env:UGII_BASE_DIR="D:\Program Files\Siemens\NX2306"
+PS C:\Users\xian7> $env:UGII_ROOT_DIR="D:\Program Files\Siemens\NX2306\UGII"
+PS C:\Users\xian7> $env:PATH = "D:\Program Files\Siemens\NX2306\NXBIN;D:\Program Files\Siemens\NX2306\UGII;$env:PATH"
+PS C:\Users\xian7> D:\NXOPEN\USER\Startup\GetSolidColorExe.exe "D:\HuaweiMoveData\Users\xian7\Desktop\temp\1.prt"
+{"code":1,"file":"D:\\HuaweiMoveData\\Users\\xian7\\Desktop\\temp\\1.prt","solid_count":1}

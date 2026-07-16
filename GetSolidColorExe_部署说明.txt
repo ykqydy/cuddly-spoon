@@ -1,0 +1,82 @@
+╔════════════════════════════════════════════════════╗
+║     GetSolidColorExe 部署说明                    ║
+║     统计 prt 文件中实体的数量                    ║
+╚════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+一、项目简介
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+打开一个 prt 文件，统计里面有多少个实体（Solid Body）。
+支持两种调用方式：命令行输出 JSON，或 NX 菜单写入信息窗口。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+二、已部署文件
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+全部在 D:\NXOPEN\USER\Startup\：
+
+  GetSolidColorExe.exe     命令行版 EXE（外部运行）
+  GetSolidColorDll.dll     内部 DLL 版（NX 菜单调用）
+  GetSolidColor.men        NX 菜单定义
+
+辅助文件：
+
+  D:\NXOPEN\USER\GetSolidColorExe_测试.bat    测试批次档
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+三、使用方法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+方法 A：NX 菜单内使用
+
+  1. 启动 NX2306，打开带实体的 prt
+  2. 菜单栏 → 颜色工具 → 获取实体颜色
+  3. 结果写入"信息 → 列出信息"窗口：
+     Solid bodies found in current part: 5
+
+方法 B：命令行 / 拖放
+
+  把 prt 文件拖到 GetSolidColorExe_测试.bat 上
+  或直接运行（需先设 NX 环境变量）：
+  GetSolidColorExe.exe "D:\part.prt"
+
+  输出 JSON：
+  {"code":1,"file":"D:\\part.prt","solid_count":5}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+四、编译方法
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXE 版：
+
+  cd D:\downloads\GetSolidColorExe
+  set "UGII_BASE_DIR=D:\Program Files\Siemens\NX2306"
+  MSBuild GetSolidColorExe.sln /p:Configuration=Release /p:Platform=x64 /t:Rebuild
+  copy x64\Release\GetSolidColorExe.exe D:\NXOPEN\USER\Startup\
+
+DLL 版：
+
+  cd D:\downloads\GetSolidColorDll
+  set "UGII_BASE_DIR=D:\Program Files\Siemens\NX2306"
+  MSBuild GetSolidColorDll.vcxproj /p:Configuration=Release /p:Platform=x64 /t:Rebuild
+  copy x64\Release\GetSolidColorDll.dll D:\NXOPEN\USER\Startup\
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+五、源码位置
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXE 版： D:\downloads\GetSolidColorExe\GetSolidColorExe.cpp
+DLL 版： D:\downloads\GetSolidColorDll\GetSolidColorDll.cpp
+实际功能代码也在这两个文件中。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+六、注意事项
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+EXE 直接运行时需先设环境变量：
+  set PATH=D:\Program Files\Siemens\NX2306\NXBIN;%PATH%
+或用批次档，里面已配好。
+
+EXE 版不依赖 NXServer，可独立使用。
+DLL 版需通过 .men 文件挂到 NX 菜单。
